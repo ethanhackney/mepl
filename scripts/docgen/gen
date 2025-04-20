@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # path prefix
-path_prefix='/home/ethanhackney/code/me'
+path_prefix='/home/ethanhackney/code/mepl'
 
 # gen prefix
 gen_prefix="${path_prefix}/scripts/docgen"

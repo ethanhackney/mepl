@@ -1,6 +1,6 @@
 #!/bin/bash
 
 # path prefix
-prefix='/home/ethanhackney/code/me'
+prefix='/home/ethanhackney/code/mepl'
 
 ${prefix}/scripts/lexgen/do_gen >"${prefix}/c/src/lex.c"

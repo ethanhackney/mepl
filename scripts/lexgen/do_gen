@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # compiler path prefix
-c_prefix='/home/ethanhackney/code/me/c'
+c_prefix='/home/ethanhackney/code/mepl/c'
 
 # lexgen path prefix
-lex_prefix='/home/ethanhackney/code/me/scripts/lexgen'
+lex_prefix='/home/ethanhackney/code/mepl/scripts/lexgen'
 
 # header file path
 header="${c_prefix}/include/lex.h"
@@ -186,7 +186,7 @@ c_prefix='/home/ethanhackney/code/me/c'
 
 # print keyword hash table
 echo "/* keyword hash table */"
-/home/ethanhackney/code/me/scripts/hashgen/a.out ${lex_prefix}/kw | \
+/home/ethanhackney/code/mepl/scripts/hashgen/a.out ${lex_prefix}/kw | \
   sed -e 's/^struct/static const struct/g' \
       -e 's/__STRUCT__/kword/g' \
       -e 's/__ID__/KWORDS/g'

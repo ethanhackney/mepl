@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # path prefix
-path_prefix='/home/ethanhackney/code/me'
+path_prefix='/home/ethanhackney/code/mepl'
 
 # backup directory path
 backup_path="${path_prefix}/.__backup"

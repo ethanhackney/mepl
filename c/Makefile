@@ -4,7 +4,7 @@ DEFS    = -DBUF_EOF=-1                                                   \
           -DBUF_STDIO_DATA_SIZE=$(shell echo "$$(( (1 << 13) - 1 ))") \
           -DBUF_UNIX_DATA_SIZE=$(shell echo "$$(( (1 << 13) - 1 ))")
 CFLAGS  = $(DEFS) -Wall -Werror -pedantic
-PREFIX  = /home/ethanhackney/code/me
+PREFIX  = /home/ethanhackney/code/mepl
 FFLAGS  = $(CFLAGS) -O3
 DFLAGS  = $(CFLAGS) -DDBUG -fsanitize=address,undefined
 INCLUDE = -I$(PREFIX)/c/include   \
