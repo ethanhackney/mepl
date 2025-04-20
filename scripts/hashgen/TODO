@@ -1,0 +1,2 @@
+make HASH_MULT a parameter
+make strhash() a parameter

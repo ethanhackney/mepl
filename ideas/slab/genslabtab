@@ -1,0 +1,21 @@
+#!/bin/bash
+
+../../scripts/hashgen/a.out tab |                                 \
+  sed -E -e 's/__STRUCT__/slab_tab_entry/g'                       \
+  -e  's/__ID__/slab_tab/g'                                       \
+  -e 's/\{ ("[^"]*"), (&[^ ]*) },/SLAB_TAB_ENTRY_INIT(\2, \1),/g'
+
+echo ""
+echo "static struct slab_tab_entry *slab_tab_def[] = {"
+i=0
+for e in $(nl tab.h); do
+  if ! [ $(egrep 'SLAB|NULL' <<<$e) ]; then
+    continue
+  fi
+  if [ $(egrep 'SLAB' <<<$e) ]; then
+    echo -e "\t&slab_tab[$i],"
+  fi
+  (( i++ ))
+done
+echo -e "\tNULL,"
+echo "};"

@@ -39,6 +39,10 @@
  */
 #include <lex.h>
 
+/**
+ * create a thread for each input file
+ */
+
 int
 main(void)
 {

@@ -1,0 +1,3 @@
+AST_STR=&ast_str_slab.asb_parent
+AST_VAR_DEF=&ast_var_def_slab.avds_parent
+AST_IF=&ast_if_slab.aif_parent
