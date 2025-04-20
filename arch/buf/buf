@@ -1,0 +1,11 @@
+AUTO GENERATED
+buf{}
+=====
+
+public macros
+-------------
+ BUF_EOF -1 /* end of file marker */
+
+fields
+------
+int (*b_getc)(struct buf *bp);

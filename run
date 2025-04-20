@@ -1,0 +1,11 @@
+#!/bin/bash
+
+./scripts/makegen/gen # generate makefiles
+./scripts/lexgen/gen  # generate lexer
+./scripts/docgen/gen  # generate documentation (needs to be done after lexgen)
+./scripts/backup      # backup files
+
+# run tests if asked to
+if [ "${1}" = 'test' ]; then
+  ./scripts/tests
+fi

@@ -1,0 +1,39 @@
+AUTO GENERATED
+dstr{}
+======
+
+header includes
+---------------
+stddef.h
+
+public functions
+----------------
+void dstr_init(struct dstr *dsp);
+void dstr_free(struct dstr *dsp);
+void dstr_push(struct dstr *dsp, int c);
+void dstr_clear(struct dstr *dsp);
+char *dstr_move(struct dstr *dsp);
+
+public macros
+-------------
+ DSTR_SHORT_SIZE (1 << 5) - 1 /* size of short string */
+
+fields
+------
+size_t d_cap;
+size_t d_len;
+char *d_cur;
+char *d_heap;
+char d_short[DSTR_SHORT_SIZE + 1];
+
+source includes
+---------------
+dstr.h
+lib.h
+stdlib.h
+string.h
+
+private functions
+-----------------
+static void dstr_grow(struct dstr *dsp);
+

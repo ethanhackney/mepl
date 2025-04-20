@@ -1,0 +1,30 @@
+AUTO GENERATED
+lib
+===
+
+header includes
+---------------
+stdarg.h
+stdbool.h
+stdio.h
+stdlib.h
+stddef.h
+string.h
+errno.h
+
+public macros
+-------------
+ HASH_MULT 31 /* hash multiplier */
+ ARRAY_SIZE(_arr) 
+ IGNORE_RET(_expr) 
+ RANGE(_low, _high, _arg) 
+ ZERO(_p, _size) 
+ ZERO_P(_p) 
+ ARRAY_ZERO(_arr) 
+ STRUCT_OF(_p, _type, _field) 
+ OK(_id, _args) 
+ ZALLOC(_size) 
+ PP_FREE(_pp) do { 
+ OK_DEF(_name, _args, _body) 
+ OK_DEF(_name, _args, _body) 
+

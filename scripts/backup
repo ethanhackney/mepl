@@ -1,0 +1,30 @@
+#!/bin/bash
+
+# path prefix
+path_prefix='/home/ethanhackney/code/me'
+
+# backup directory path
+backup_path="${path_prefix}/.__backup"
+
+# remove backup directory if it exists
+if [ -e "${backup_path}" ]; then
+  rm -rf "${backup_path}"
+fi
+
+# create backup directory
+mkdir "${backup_path}"
+
+# dirents to copy
+_dirs=(
+  arch    # docs
+  buf     # buffer code
+  lib     # library code
+  c       # me compiler
+  scripts # scripts 
+)
+
+# copy dirents
+for d in "${_dirs[@]}"; do
+  # copy dirent to backup directory
+  cp -R "${path_prefix}/${d}" "${backup_path}"
+done

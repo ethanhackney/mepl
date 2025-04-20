@@ -1,0 +1,35 @@
+AUTO GENERATED
+buf_nstr{}
+==========
+
+header includes
+---------------
+buf.h
+stddef.h
+
+public functions
+----------------
+void buf_nstr_init(struct buf_nstr *bnp, char **strpp, size_t len);
+void buf_nstr_free(struct buf_nstr *bnp, char **strpp);
+
+fields
+------
+struct buf n_buf;
+size_t n_len;
+char *n_str;
+char *n_p;
+
+source includes
+---------------
+buf_nstr.h
+lib.h
+stdbool.h
+
+private functions
+-----------------
+static int buf_nstr_getc(struct buf *bp);
+static bool buf_nstr_empty(const struct buf_nstr *bnp);
+
+private macros
+--------------
+NSTR(_bp)

@@ -1,0 +1,196 @@
+#!/bin/bash
+
+# compiler path prefix
+c_prefix='/home/ethanhackney/code/me/c'
+
+# lexgen path prefix
+lex_prefix='/home/ethanhackney/code/me/scripts/lexgen'
+
+# header file path
+header="${c_prefix}/include/lex.h"
+
+# token type constant prefix
+TT_PREFIX='TT'
+
+# token types
+tt=(
+  "${TT_PREFIX}_EOF,    "
+  "${TT_PREFIX}_STR,    "
+  "${TT_PREFIX}_ID,     "
+  "${TT_PREFIX}_ASSIGN, "
+  "${TT_PREFIX}_STR_LIT,"
+  "${TT_PREFIX}_COUNT,  "
+)
+
+# token type comments
+tt_comment=(
+  'end of file'
+  'str'
+  'identifier'
+  '='
+  '"literal"'
+  'count of token types'
+)
+
+# maximum char
+UCHAR_MAX=$(${lex_prefix}/uchar)
+
+# ascii values
+ALPHA_LOWER_LOW=97
+ALPHA_LOWER_HIGH=122
+DOUBLE_QUOTE=34
+ASSIGN=61
+
+# generate lex header file
+cat >"${header}" <<EOF
+/* AUTO GENERATED */
+#ifndef LEX_H
+#define LEX_H
+
+/**
+ * dstr{}
+ * dstr_init()
+ * dstr_free()
+ * dstr_push()
+ * dstr_clear()
+ */
+#include <dstr.h>
+
+/**
+ * buf{}
+ * BUF_EOF
+ */
+#include <buf.h>
+
+/* token types */
+enum {
+EOF
+
+# generate token types
+for ((i = 0; i < ${#tt[@]}; i++)); do
+  echo "        ${tt[i]} /* ${tt_comment[i]} */" >>"${header}"
+done
+
+cat >>"${header}" <<EOF
+};
+
+/* lexer */
+struct lex {
+        struct dstr l_lex;     /* current lexeme */
+        struct buf  *l_buf;    /* buf */
+        int         l_type;    /* current token type */
+        int         l_putback; /* putback character */
+};
+
+/**
+ * initialize lex:
+ *
+ * args:
+ *  @lp: pointer to lex
+ *  @bp: pointer to buf
+ *
+ * ret:
+ *  none
+ */
+void lex_init(struct lex *lp, struct buf *bp);
+
+/**
+ * free lex:
+ *
+ * args:
+ *  @lp: pointer to lex
+ *
+ * ret:
+ *  none
+ */
+void lex_free(struct lex *lp);
+
+/**
+ * advance to next token:
+ *
+ * args:
+ *  @lp: pointer to lex
+ *
+ * ret:
+ *  none
+ */
+void lex_next(struct lex *lp);
+
+/**
+ * get current tokens type names:
+ *
+ * args:
+ *  @lp: pointer to lex
+ *
+ * ret:
+ *  pointer to name of type
+ */
+const char *lex_name(struct lex *lp);
+
+#endif /* #ifndef LEX_H */
+EOF
+
+# print code that comes before tables
+cat "${lex_prefix}/before_tabs.c"
+echo ""
+
+# generate char function map
+echo "/* char function map */"
+echo "static void (*const CHAR_FN[UCHAR_MAX + 1])(struct lex *, int c) = {"
+for ((c = 0; c <= UCHAR_MAX; c++)); do
+  printf '\t'
+  if (( ALPHA_LOWER_LOW <= c && c <= ALPHA_LOWER_HIGH )); then
+    printf 'id'
+  elif (( c == DOUBLE_QUOTE )); then
+    printf 'str'
+  elif (( c == ASSIGN )); then
+    printf 'single'
+  else
+    printf 'err'
+  fi
+  printf ',\n'
+done
+printf "};\n\n"
+
+# generate token name table
+echo "/* token type names */"
+echo "static const char *const TT_NAMES[TT_COUNT] = {"
+for ((i = 0; i < ${#tt[@]} - 1; i++)); do
+  t="${tt[i]}"
+  # remove trailing space and comma
+  printf "\t\"${t}\"" | tr -d ' ,'
+  printf ',\n'
+done
+printf "};\n\n"
+
+# special single characters
+single=(
+  '='
+)
+
+# special single character token types
+single_tt=(
+  'TT_ASSIGN'
+)
+
+echo "/* special single char lookup */"
+echo "static const int SINGLE[UCHAR_MAX + 1] = {"
+for ((i = 0; i < ${#single[@]}; i++)); do
+  c=${single[i]}
+  st=${single_tt[i]}
+  echo -e "\t['$c'] = $st,"
+done
+printf "};\n\n"
+
+c_prefix='/home/ethanhackney/code/me/c'
+
+# print keyword hash table
+echo "/* keyword hash table */"
+/home/ethanhackney/code/me/scripts/hashgen/a.out ${lex_prefix}/kw | \
+  sed -e 's/^struct/static const struct/g' \
+      -e 's/__STRUCT__/kword/g' \
+      -e 's/__ID__/KWORDS/g'
+echo ""
+
+# print code that comes after tables
+cat "${lex_prefix}/after_tabs.c"

@@ -1,0 +1,6 @@
+SRC     = ./main.c                  \
+          $(PREFIX)/buf/src/stdio.c \
+          $(PREFIX)/buf/src/unix.c  \
+          $(PREFIX)/buf/src/cstr.c  \
+          $(PREFIX)/buf/src/nstr.c  \
+          $(PREFIX)/lib/src/dstr.c

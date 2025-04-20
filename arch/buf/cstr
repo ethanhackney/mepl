@@ -1,0 +1,34 @@
+AUTO GENERATED
+buf_cstr{}
+==========
+
+header includes
+---------------
+buf.h
+
+public functions
+----------------
+void buf_cstr_init(struct buf_cstr *bsp, char **strpp);
+void buf_cstr_free(struct buf_cstr *bsp, char **strpp);
+
+fields
+------
+struct buf c_buf;
+const char *c_p;
+char *c_str;
+
+source includes
+---------------
+buf_cstr.h
+lib.h
+string.h
+stdbool.h
+
+private functions
+-----------------
+static int buf_cstr_getc(struct buf *bp);
+static bool buf_cstr_empty(const struct buf_cstr *bsp);
+
+private macros
+--------------
+CSTR(_bp)

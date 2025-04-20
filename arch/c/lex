@@ -1,0 +1,38 @@
+AUTO GENERATED
+lex{}
+=====
+
+header includes
+---------------
+dstr.h
+buf.h
+
+public functions
+----------------
+void lex_init(struct lex *lp, struct buf *bp);
+void lex_free(struct lex *lp);
+void lex_next(struct lex *lp);
+const char *lex_name(struct lex *lp);
+
+fields
+------
+struct dstr l_lex;
+struct buf *l_buf;
+int l_type;
+int l_putback;
+
+source includes
+---------------
+lex.h
+lib.h
+ctype.h
+limits.h
+
+private functions
+-----------------
+static void id(struct lex *lp, int c);
+static void str(struct lex *lp, int c);
+static void single(struct lex *lp, int c);
+static void err(struct lex *lp, int c);
+static int lex_getc(struct lex *lp);
+

@@ -1,0 +1,43 @@
+AUTO GENERATED
+buf_unix{}
+==========
+
+header includes
+---------------
+buf.h
+
+public functions
+----------------
+void buf_unix_init(struct buf_unix *bup, int fd);
+void buf_unix_free(struct buf_unix *bup);
+
+public macros
+-------------
+ BUF_UNIX_DATA_SIZE ((1 << 13) - 1) /* buf_unix data size */
+
+fields
+------
+struct buf u_buf;
+const char *u_p;
+char u_data[BUF_UNIX_DATA_SIZE + 1];
+int u_fd;
+
+source includes
+---------------
+buf_unix.h
+lib.h
+stdbool.h
+sys/types.h
+unistd.h
+
+private functions
+-----------------
+static int buf_unix_getc(struct buf *bp);
+static bool buf_unix_empty(const struct buf_unix *bup);
+static bool buf_unix_fill(struct buf_unix *bup);
+static int buf_unix_next(struct buf_unix *bup);
+static bool buf_unix_read(struct buf_unix *bup);
+
+private macros
+--------------
+UNIX(_bp)

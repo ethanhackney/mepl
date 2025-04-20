@@ -1,0 +1,61 @@
+#!/bin/bash
+
+# path prefix
+path_prefix='/home/ethanhackney/code/me'
+
+# makegen prefix
+gen_prefix="${path_prefix}/scripts/makegen"
+
+# tab character
+tab="$(printf '\t')"
+
+# directories that need makefiles
+makedirs=(
+  "${path_prefix}/buf/test" # buf testing
+  "${path_prefix}/c"        # compiler code
+  "${path_prefix}/lib/test" # lib testing
+)
+
+# include directories for each directory
+includes=(
+  "${gen_prefix}/include/buf_test" # includes for buf testing
+  "${gen_prefix}/include/c"        # includes for compiler
+  "${gen_prefix}/include/lib"      # includes for lib testing
+)
+
+# source files for each directory
+sources=(
+  "${gen_prefix}/src/buf_test" # source files for buf testing
+  "${gen_prefix}/src/c"        # source files for compiler
+  "${gen_prefix}/src/lib"      # source files for lib testing
+)
+
+# for each directory that needs a makefile
+for ((i = 0; i < ${#makedirs[@]}; i++)); do
+  # generate makefile
+  cat >"${makedirs[i]}/Makefile" <<EOF
+# AUTO GENERATED
+SHELL   = bash
+DEFS    = -DBUF_EOF=-1                                                   \\
+          -DBUF_STDIO_DATA_SIZE=\$(shell echo "\$\$(( (1 << 13) - 1 ))") \\
+          -DBUF_UNIX_DATA_SIZE=\$(shell echo "\$\$(( (1 << 13) - 1 ))")
+CFLAGS  = \$(DEFS) -Wall -Werror -pedantic
+PREFIX  = /home/ethanhackney/code/me
+FFLAGS  = \$(CFLAGS) -O3
+DFLAGS  = \$(CFLAGS) -DDBUG -fsanitize=address,undefined
+$(cat ${includes[i]})
+$(cat ${sources[i]})
+CC      = gcc
+
+safe:
+${tab}\$(CC) \$(INCLUDE) \$(DFLAGS) \$(SRC)
+
+fast:
+${tab}\$(CC) \$(INCLUDE) \$(FFLAGS) \$(SRC)
+
+tests:
+${tab}\$(CC) \$(INCLUDE) \$(DFLAGS) \$(SRC)
+${tab}./a.out
+${tab}rm a.out
+EOF
+done

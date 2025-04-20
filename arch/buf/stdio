@@ -1,0 +1,42 @@
+AUTO GENERATED
+buf_stdio{}
+===========
+
+header includes
+---------------
+buf.h
+stdio.h
+
+public functions
+----------------
+void buf_stdio_init(struct buf_stdio *bsp, FILE *fp);
+void buf_stdio_free(struct buf_stdio *bsp);
+
+public macros
+-------------
+ BUF_STDIO_DATA_SIZE ((1 << 13) - 1) /* buf_stdio data size */
+
+fields
+------
+struct buf s_buf;
+const char *s_p;
+FILE *s_fp;
+char s_data[BUF_STDIO_DATA_SIZE + 1];
+
+source includes
+---------------
+buf_stdio.h
+lib.h
+stdbool.h
+
+private functions
+-----------------
+static int buf_stdio_getc(struct buf *bp);
+static bool buf_stdio_empty(const struct buf_stdio *bsp);
+static bool buf_stdio_fill(struct buf_stdio *bsp);
+static int buf_stdio_next(struct buf_stdio *bsp);
+static bool buf_stdio_read(struct buf_stdio *bsp);
+
+private macros
+--------------
+STDIO(_bp)

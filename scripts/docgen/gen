@@ -1,0 +1,79 @@
+#!/bin/bash
+
+# path prefix
+path_prefix='/home/ethanhackney/code/me'
+
+# gen prefix
+gen_prefix="${path_prefix}/scripts/docgen"
+
+# doc file titles
+titles=(
+  'buf{}'
+  'buf_stdio{}'
+  'buf_unix{}'
+  'buf_cstr{}'
+  'buf_nstr{}'
+  'lib'
+  'dstr{}'
+  'lex{}'
+)
+
+# paths to header files
+hdrs=(
+  "${path_prefix}/buf/include/buf.h"
+  "${path_prefix}/buf/include/buf_stdio.h"
+  "${path_prefix}/buf/include/buf_unix.h"
+  "${path_prefix}/buf/include/buf_cstr.h"
+  "${path_prefix}/buf/include/buf_nstr.h"
+  "${path_prefix}/lib/include/lib.h"
+  "${path_prefix}/lib/include/dstr.h"
+  "${path_prefix}/c/include/lex.h"
+)
+
+# paths to source files
+srcs=(
+  ''
+  "${path_prefix}/buf/src/stdio.c"
+  "${path_prefix}/buf/src/unix.c"
+  "${path_prefix}/buf/src/cstr.c"
+  "${path_prefix}/buf/src/nstr.c"
+  ''
+  "${path_prefix}/lib/src/dstr.c"
+  "${path_prefix}/c/src/lex.c"
+)
+
+# where to place docs
+where=(
+  "${path_prefix}/arch/buf/buf"
+  "${path_prefix}/arch/buf/stdio"
+  "${path_prefix}/arch/buf/unix"
+  "${path_prefix}/arch/buf/cstr"
+  "${path_prefix}/arch/buf/nstr"
+  "${path_prefix}/arch/lib/lib"
+  "${path_prefix}/arch/lib/dstr"
+  "${path_prefix}/arch/c/lex"
+)
+
+# generate docs
+for ((i = 0; i < ${#hdrs[@]}; i++)); do
+  t="${titles[i]}"
+  h="${hdrs[i]}"
+  s="${srcs[i]}"
+  w="${where[i]}"
+
+  # print title
+  echo "AUTO GENERATED" >"${w}"
+  echo "${t}" >>"${w}"
+  printf '%.0s=' $(seq ${#t}) >>"${w}"
+  echo "" >>"${w}"
+  echo "" >>"${w}"
+
+  # generate header file docs
+  ${gen_prefix}/hdrgen.awk "${h}" >>"${w}"
+  if [ -n "${s}" ]; then
+    # add an extra space
+    echo "" >>"${w}"
+    # generate source file docs
+    ${gen_prefix}/srcgen.awk "${s}" >>"${w}"
+  fi
+done

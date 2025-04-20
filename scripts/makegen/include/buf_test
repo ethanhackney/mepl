@@ -1,0 +1,2 @@
+INCLUDE = -I$(PREFIX)/lib/include \
+          -I$(PREFIX)/buf/include

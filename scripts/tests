@@ -1,0 +1,18 @@
+#!/bin/bash
+
+# path prefix
+path_prefix='/home/ethanhackney/code/me'
+
+# tests to run
+tests=(
+  "${path_prefix}/buf/test"
+  "${path_prefix}/c"
+)
+
+# for each test
+for t in "${tests[@]}"; do
+  # change to test directory
+  cd "${t}"
+  # run tests
+  make tests
+done
