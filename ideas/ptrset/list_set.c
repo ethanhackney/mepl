@@ -4,6 +4,12 @@
 #define KID_FOR_EACH(np, kp) \
         for (kp = (np)->kids; kp; kp = kp->next)
 
+#define KID_FOR_EACH_PP(np, kpp) \
+        for (kpp = &(np)->kids; *kpp; kpp = &(*kpp)->next)
+
+#define KID_FOR_EACH_SAFE(np, kp, next) \
+        for (kp = (np)->kids; kp && ((next = kp->next), 1); kp = next)
+
 struct node;
 
 struct kid {
@@ -28,17 +34,14 @@ static void list_set_add(struct ptrset *psp, ptr_t *ptr);
 static bool do_list_set_has(const struct node *np, ptr_t *ptr);
 static void do_list_set_free(struct node **npp);
 static void do_list_set_add(struct list_set *lp, ptr_t *ptr);
-static void node_push(struct list_set *lp, struct node *np, ptr_t chunk);
+static struct kid *kid_get_or_set(struct list_set *lp,
+                struct node *np, ptr_t chunk);
 static struct kid *kid_find(const struct node *np, ptr_t chunk);
 
 struct ptrset *
 list_set_new(void)
 {
-        struct list_set *lp = calloc(1, sizeof(*lp));
-
-        if (!lp)
-                die("list_set_new(): calloc()");
-
+        struct list_set *lp = zalloc(sizeof(*lp));
         lp->set.ps_bytes = sizeof(*lp);
         lp->set.ps_has = list_set_has;
         lp->set.ps_free = list_set_free;
@@ -96,13 +99,16 @@ static void
 do_list_set_free(struct node **npp)
 {
         struct node *np = *npp;
+        struct kid *next = NULL;
         struct kid *kp = NULL;
 
         if (!np)
                 return;
 
-        KID_FOR_EACH(np, kp)
+        KID_FOR_EACH_SAFE(np, kp, next) {
                 do_list_set_free(&kp->edge);
+                free(kp);
+        }
 
         free(np);
         *npp = NULL;
@@ -121,14 +127,8 @@ do_list_set_add(struct list_set *lp, ptr_t *ptr)
                 if (!*npp)
                         *npp = node_new(lp);
 
-                kp = kid_find(*npp, *p);
-                if (kp) {
-                        npp = &kp->edge;
-                        continue;
-                }
-
-                node_push(lp, *npp, *p);
-                npp = &(*npp)->kids->edge;
+                kp = kid_get_or_set(lp, *npp, *p);
+                npp = &kp->edge;
         }
 
         *npp = node_new(lp);
@@ -137,27 +137,9 @@ do_list_set_add(struct list_set *lp, ptr_t *ptr)
 static struct node *
 node_new(struct list_set *lp)
 {
-        struct node *np = calloc(1, sizeof(*np));
-
-        if (!np)
-                die("node_new(): calloc()");
-
+        struct node *np = zalloc(sizeof(*np));
         lp->set.ps_bytes += sizeof(*np);
         return np;
-}
-
-static void
-node_push(struct list_set *lp, struct node *np, ptr_t chunk)
-{
-        struct kid *kp = calloc(1, sizeof(*kp));
-
-        if (!kp)
-                die("node_push(): calloc()");
-
-        kp->v = chunk;
-        kp->next = np->kids;
-        np->kids = kp;
-        lp->set.ps_bytes += sizeof(*kp);
 }
 
 static struct kid *
@@ -170,5 +152,26 @@ kid_find(const struct node *np, ptr_t chunk)
                         break;
         }
 
+        return kp;
+}
+
+static struct kid *
+kid_get_or_set(struct list_set *lp, struct node *np, ptr_t chunk)
+{
+        struct kid **kpp = NULL;
+        struct kid *kp = NULL;
+
+        KID_FOR_EACH_PP(np, kpp) {
+                if ((*kpp)->v == chunk)
+                        return *kpp;
+                if ((*kpp)->v > chunk)
+                        break;
+        }
+
+        kp = zalloc(sizeof(*kp));
+        kp->v = chunk;
+        kp->next = *kpp;
+        *kpp = kp;
+        lp->set.ps_bytes += sizeof(*kp);
         return kp;
 }

@@ -1,3 +1,4 @@
+#include "bst_set.h"
 #include "dynarr_set.h"
 #include "fixset.h"
 #include "list_set.h"
@@ -15,22 +16,36 @@ static void ptrset_test(struct ptrset *psp);
 int
 main(int argc, char **argv)
 {
+        struct kvp {
+                char *name;
+                struct ptrset *(*newfn)(void);
+        } kvps[] = {
+                { "fixset",     fixset_new     },
+                { "dynarr_set", dynarr_set_new },
+                { "list_set",   list_set_new   },
+                { "bst_set",    bst_set_new    },
+                { NULL,         NULL           },
+        };
+        struct kvp *kp = NULL;
+
         struct ptrset *psp = NULL;
 
         if (!argv[1]) {
                 printf("no arg given\n");
                 exit(1);
-        } else if (!strcmp(argv[1], "fixset")) {
-                psp = fixset_new();
-        } else if (!strcmp(argv[1], "dynarr_set")) {
-                psp = dynarr_set_new();
-        } else if (!strcmp(argv[1], "list_set")) {
-                psp = list_set_new();
-        } else {
+        }
+
+        for (kp = kvps; kp->name; kp++) {
+                if (!strcmp(argv[1], kp->name))
+                        break;
+        }
+
+        if (!kp->name) {
                 printf("no set named %s\n", argv[1]);
                 exit(1);
         }
 
+        psp = kp->newfn();
         ptrset_test(psp);
         psp->ps_free(&psp);
 }

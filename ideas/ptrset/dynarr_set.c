@@ -1,6 +1,8 @@
 #include "dynarr_set.h"
 #include "lib.h"
 
+/** TODO: probably have a pointer invalidation problem in addition code */
+
 #define KID_END(np) \
         ((np)->kids + (np)->len)
 
@@ -39,11 +41,7 @@ static struct kid *kid_find(const struct node *np, ptr_t chunk);
 struct ptrset *
 dynarr_set_new(void)
 {
-        struct dynarr_set *dp = calloc(1, sizeof(*dp));
-
-        if (!dp)
-                die("dynarr_set_new(): calloc()");
-
+        struct dynarr_set *dp = zalloc(sizeof(*dp));
         dp->set.ps_bytes = sizeof(*dp);
         dp->set.ps_has = dynarr_set_has;
         dp->set.ps_free = dynarr_set_free;
@@ -109,6 +107,7 @@ do_dynarr_set_free(struct node **npp)
         KID_FOR_EACH(np, kp)
                 do_dynarr_set_free(&kp->edge);
 
+        free(np->kids);
         free(np);
         *npp = NULL;
 }
@@ -142,11 +141,7 @@ do_dynarr_set_add(struct dynarr_set *dp, ptr_t *ptr)
 static struct node *
 dynarr_set_node_new(struct dynarr_set *dp)
 {
-        struct node *np = calloc(1, sizeof(*np));
-
-        if (!np)
-                die("dynarr_set_node_new(): calloc()");
-
+        struct node *np = zalloc(sizeof(*np));
         dp->set.ps_bytes += sizeof(*np);
         return np;
 }
@@ -172,8 +167,9 @@ node_grow(struct dynarr_set *dp, struct node *np)
 
         kids = realloc(kids, sizeof(*kids) * cap);
         if (!kids)
-                die("node_grow(): calloc()");
+                die("node_grow(): realloc()");
 
+        memset(kids + np->cap, 0, sizeof(*kids) * (cap - np->cap));
         dp->set.ps_bytes += sizeof(*kids) * (cap - np->cap);
         np->kids = kids;
         np->cap = cap;

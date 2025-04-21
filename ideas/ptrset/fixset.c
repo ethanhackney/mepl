@@ -21,11 +21,7 @@ static void do_fixset_add(struct fixset *fp, ptr_t *ptr);
 struct ptrset *
 fixset_new(void)
 {
-        struct fixset *fp = calloc(1, sizeof(*fp));
-
-        if (!fp)
-                die("fixset_new(): calloc()");
-
+        struct fixset *fp = zalloc(sizeof(*fp));
         fp->set.ps_bytes = sizeof(*fp);
         fp->set.ps_has = fixset_has;
         fp->set.ps_free = fixset_free;
@@ -110,11 +106,7 @@ do_fixset_add(struct fixset *fp, ptr_t *ptr)
 static struct node *
 node_new(struct fixset *fp)
 {
-        struct node *np = calloc(1, sizeof(*np));
-
-        if (!np)
-                die("node_new(): calloc()");
-
+        struct node *np = zalloc(sizeof(*np));
         fp->set.ps_bytes += sizeof(*np);
         return np;
 }
