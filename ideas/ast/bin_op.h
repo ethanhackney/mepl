@@ -2,19 +2,6 @@
 #define AST_BIN_OP_H
 
 #include "ast.h"
-#include "lib.h"
-
-#define bin_op(ap) \
-        struct_of(ap, struct ast_bin_op, abo_ast)
-
-#define AST_BIN_OP_INIT(type, left, right)              \
-        {                                               \
-                .abo_left  = left,                      \
-                .abo_right = right,                     \
-                .abo_ast   = {                          \
-                        .a_visit = ast_bin_op_visit,    \
-                },                                      \
-        }
 
 enum {
         AST_BIN_OP_ADD,

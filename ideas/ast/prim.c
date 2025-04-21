@@ -1,4 +1,8 @@
+#include "lib.h"
 #include "prim.h"
+
+#define PRIM(ap) \
+        struct_of(ap, struct ast_prim, ap_ast)
 
 static void prim_visit(const struct ast *ap, struct ast_visitor *vp);
 static void prim_init(struct ast_prim *pp, int type);
@@ -16,6 +20,7 @@ AST_PRIM_INIT_DEF(int, int)
 AST_PRIM_INIT_DEF(long, long)
 AST_PRIM_INIT_DEF(float, float)
 AST_PRIM_INIT_DEF(double, double)
+AST_PRIM_INIT_DEF(char, char)
 
 static void
 prim_init(struct ast_prim *pp, int type)
@@ -27,7 +32,7 @@ prim_init(struct ast_prim *pp, int type)
 static void
 prim_visit(const struct ast *ap, struct ast_visitor *vp)
 {
-        const struct ast_prim *pp = prim(ap);
+        const struct ast_prim *pp = PRIM(ap);
 
         vp->av_prim(vp, pp);
 }

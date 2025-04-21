@@ -1,54 +1,54 @@
 #include "bin_op.h"
 #include "dump.h"
+#include "lib.h"
 #include "prim.h"
-#include <stdio.h>
 
 #define DUMP(vp) \
         struct_of(vp, struct ast_dump_visitor, adv_v)
 
-#define AST_PRIM_DUMP_SWITCH_CASE(type, pp, dtype)                      \
-        case type:                                                      \
-                printf(AST_PRIM_CONV_SPEC(pp), pp->ap_ ## dtype);       \
+#define AST_PRIM_DUMP_SWITCH_CASE(dv, type, pp, dtype)                         \
+        case type:                                                             \
+                fprintf(dv->adv_fp, AST_PRIM_CONV_SPEC(pp), pp->ap_ ## dtype); \
                 break;
 
 #define AST_PRIM_CONV_SPEC(pp) \
         AST_PRIM_CONV_SPECS[pp->ap_type]
 
-#define AST_PRIM_DUMP_SWITCH(pp) do {                           \
-        switch (pp->ap_type) {                                  \
-        AST_PRIM_DUMP_SWITCH_CASE(AST_PRIM_INT,    pp, int)     \
-        AST_PRIM_DUMP_SWITCH_CASE(AST_PRIM_LONG,   pp, long)    \
-        AST_PRIM_DUMP_SWITCH_CASE(AST_PRIM_FLOAT,  pp, float)   \
-        AST_PRIM_DUMP_SWITCH_CASE(AST_PRIM_DOUBLE, pp, double)  \
-        }                                                       \
+#define AST_PRIM_DUMP_SWITCH(dv, pp) do {                          \
+        switch (pp->ap_type) {                                     \
+        AST_PRIM_DUMP_SWITCH_CASE(dv, AST_PRIM_INT,    pp, int)    \
+        AST_PRIM_DUMP_SWITCH_CASE(dv, AST_PRIM_LONG,   pp, long)   \
+        AST_PRIM_DUMP_SWITCH_CASE(dv, AST_PRIM_FLOAT,  pp, float)  \
+        AST_PRIM_DUMP_SWITCH_CASE(dv, AST_PRIM_DOUBLE, pp, double) \
+        AST_PRIM_DUMP_SWITCH_CASE(dv, AST_PRIM_CHAR,   pp, char)   \
+        }                                                          \
 } while (0)
 
-static void indent(int space);
+static void indent(struct ast_dump_visitor *dv, int space);
 
-#define AST_DUMP_START(dv) do { \
-        indent(dv->adv_space);  \
-        printf("{\n");          \
+#define AST_DUMP_START(dv) do {         \
+        indent(dv, dv->adv_space);      \
+        fprintf(dv->adv_fp, "{\n");     \
 } while (0)
 
-static void indent(int space)
+static void indent(struct ast_dump_visitor *dv, int space)
 {
-        while (space--)
-                putchar(' ');
+        fprintf(stderr, "%*s", space, "");
 }
 
-#define AST_DUMP_END(dv) do {   \
-        indent(dv->adv_space);  \
-        printf("},\n");         \
+#define AST_DUMP_END(dv) do {           \
+        indent(dv, dv->adv_space);      \
+        fprintf(dv->adv_fp, "},\n");    \
 } while (0)
 
-#define AST_DUMP_TYPE(dv, type) do {            \
-        indent(dv->adv_space + 2);              \
-        printf(".type = %s{},\n", type);        \
+#define AST_DUMP_TYPE(dv, type) do {                    \
+        indent(dv, dv->adv_space + 2);                  \
+        fprintf(dv->adv_fp, ".type = %s{},\n", type);   \
 } while (0)
 
 #define AST_DUMP_FIELD(dv, fmt) do {    \
-        indent(dv->adv_space + 2);      \
-        printf(fmt);                    \
+        indent(dv, dv->adv_space + 2);  \
+        fprintf(dv->adv_fp, fmt);       \
 } while (0)
 
 static const char *const AST_BIN_OP_NAMES[AST_BIN_OP_COUNT] = {
@@ -66,6 +66,7 @@ static const char *const AST_PRIM_NAMES[AST_PRIM_COUNT] = {
         "ast_long",
         "ast_float",
         "ast_double",
+        "ast_char",
 };
 #define AST_PRIM_NAME(pp) \
         AST_PRIM_NAMES[pp->ap_type]
@@ -76,11 +77,12 @@ static void inc(struct ast_dump_visitor *dv, int amt);
 static void dec(struct ast_dump_visitor *dv, int amt);
 
 void
-ast_dump_visitor_init(struct ast_dump_visitor *dv, int start)
+ast_dump_visitor_init(struct ast_dump_visitor *dv, FILE *fp, int start)
 {
         dv->adv_v.av_bin_op = bin_op_dump;
         dv->adv_v.av_prim = prim_dump;
         dv->adv_space = start;
+        dv->adv_fp = fp;
 }
 
 static void
@@ -127,7 +129,7 @@ prim_dump(struct ast_visitor *vp, const struct ast_prim *pp)
         AST_DUMP_TYPE(dv, AST_PRIM_NAME(pp));
 
         AST_DUMP_FIELD(dv, ".val = ");
-        AST_PRIM_DUMP_SWITCH(pp);
+        AST_PRIM_DUMP_SWITCH(dv, pp);
         printf(",\n");
 
         AST_DUMP_END(dv);
