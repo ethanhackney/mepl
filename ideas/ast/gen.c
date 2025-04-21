@@ -5,7 +5,7 @@
 #include "prim.h"
 
 #define GEN(vp) \
-        struct_of(vp, struct ast_gen_visitor, agv_v)
+        STRUCT_OF(vp, struct ast_gen_visitor, agv_v)
 
 #define AST_BIN_OP_GEN(op, r0, r1, fp) \
         fprintf(fp, "%s %s, %s\n", AST_BIN_OP_CMD(op), r0, r1)
@@ -18,24 +18,11 @@
         *p = 0;                                 \
 } while (0)
 
-#define AST_PRIM_GEN(r, fp, pp, dtype) do {                                  \
-        static char conv_spec[64];                                           \
-        GEN_PRIM_FMT(pp, conv_spec);                                         \
-        fprintf(fp, conv_spec, r, AST_PRIM_CONV_SPEC(pp), pp->ap_ ## dtype); \
+#define AST_PRIM_GEN(pp, dtype, r, fp) do {             \
+        static char conv_spec[64];                      \
+        GEN_PRIM_FMT(pp, conv_spec);                    \
+        fprintf(fp, conv_spec, r, pp->ap_ ## dtype);    \
 } while (0)
-
-#define AST_PRIM_GEN_SWITCH_CASE(type, r, fp, pp, dtype)        \
-        case type:                                              \
-                AST_PRIM_GEN(r, fp, pp, dtype);                 \
-                break;
-
-#define AST_PRIM_GEN_SWITCH(pp, dst, fp)                                \
-        switch (pp->ap_type) {                                          \
-        AST_PRIM_GEN_SWITCH_CASE(AST_PRIM_INT,    dst, fp, pp, int)     \
-        AST_PRIM_GEN_SWITCH_CASE(AST_PRIM_LONG,   dst, fp, pp, long)    \
-        AST_PRIM_GEN_SWITCH_CASE(AST_PRIM_FLOAT,  dst, fp, pp, float)   \
-        AST_PRIM_GEN_SWITCH_CASE(AST_PRIM_DOUBLE, dst, fp, pp, double)  \
-        }
 
 static const char *const AST_BIN_OP_CMDS[AST_BIN_OP_COUNT] = {
         "add",
@@ -82,5 +69,5 @@ static void prim_gen(struct ast_visitor *vp, const struct ast_prim *pp)
         const char *dst = NULL;
 
         dst = reglist_get(&gv->agv_reg);
-        AST_PRIM_GEN_SWITCH(pp, dst, gv->agv_fp);
+        AST_PRIM_SWITCH(pp, AST_PRIM_GEN, dst, gv->agv_fp);
 }

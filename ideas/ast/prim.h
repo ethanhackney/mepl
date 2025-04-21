@@ -3,18 +3,36 @@
 
 #include "ast.h"
 
+#define AST_PRIM_SWITCH_CASE(type, pp, dtype, func, ...)        \
+        case type:                                              \
+                func(pp, dtype, __VA_ARGS__);                   \
+                break;
+
+#define AST_PRIM_SWITCH(pp, func, ...) do {                                    \
+        switch (pp->ap_type) {                                                 \
+        AST_PRIM_SWITCH_CASE(AST_PRIM_INT,    pp, int,    func, __VA_ARGS__)   \
+        AST_PRIM_SWITCH_CASE(AST_PRIM_LONG,   pp, long,   func, __VA_ARGS__)   \
+        AST_PRIM_SWITCH_CASE(AST_PRIM_FLOAT,  pp, float,  func, __VA_ARGS__)   \
+        AST_PRIM_SWITCH_CASE(AST_PRIM_DOUBLE, pp, double, func, __VA_ARGS__)   \
+        AST_PRIM_SWITCH_CASE(AST_PRIM_CHAR,   pp, char,   func, __VA_ARGS__)   \
+        AST_PRIM_SWITCH_CASE(AST_PRIM_CSTR,   pp, cstr,   func, __VA_ARGS__)   \
+        }                                                                      \
+} while (0)
+
 enum {
         AST_PRIM_INT,
         AST_PRIM_LONG,
         AST_PRIM_FLOAT,
         AST_PRIM_DOUBLE,
         AST_PRIM_CHAR,
+        AST_PRIM_CSTR,
         AST_PRIM_COUNT,
 };
 
 struct ast_prim {
         struct ast ap_ast;
         union {
+                char   *ap_cstr;
                 double ap_double;
                 float  ap_float;
                 long   ap_long;
@@ -30,6 +48,7 @@ static const char *const AST_PRIM_CONV_SPECS[AST_PRIM_COUNT] = {
         "%f",
         "%f",
         "%c",
+        "\"%s\"",
 };
 #define AST_PRIM_CONV_SPEC(pp)  \
         AST_PRIM_CONV_SPECS[pp->ap_type]
@@ -42,5 +61,6 @@ AST_PRIM_INIT_PROTO(long, long);
 AST_PRIM_INIT_PROTO(float, float);
 AST_PRIM_INIT_PROTO(double, double);
 AST_PRIM_INIT_PROTO(char, char);
+AST_PRIM_INIT_PROTO(cstr, char *);
 
 #endif

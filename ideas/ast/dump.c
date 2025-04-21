@@ -4,25 +4,10 @@
 #include "prim.h"
 
 #define DUMP(vp) \
-        struct_of(vp, struct ast_dump_visitor, adv_v)
+        STRUCT_OF(vp, struct ast_dump_visitor, adv_v)
 
-#define AST_PRIM_DUMP_SWITCH_CASE(dv, type, pp, dtype)                         \
-        case type:                                                             \
-                fprintf(dv->adv_fp, AST_PRIM_CONV_SPEC(pp), pp->ap_ ## dtype); \
-                break;
-
-#define AST_PRIM_CONV_SPEC(pp) \
-        AST_PRIM_CONV_SPECS[pp->ap_type]
-
-#define AST_PRIM_DUMP_SWITCH(dv, pp) do {                          \
-        switch (pp->ap_type) {                                     \
-        AST_PRIM_DUMP_SWITCH_CASE(dv, AST_PRIM_INT,    pp, int)    \
-        AST_PRIM_DUMP_SWITCH_CASE(dv, AST_PRIM_LONG,   pp, long)   \
-        AST_PRIM_DUMP_SWITCH_CASE(dv, AST_PRIM_FLOAT,  pp, float)  \
-        AST_PRIM_DUMP_SWITCH_CASE(dv, AST_PRIM_DOUBLE, pp, double) \
-        AST_PRIM_DUMP_SWITCH_CASE(dv, AST_PRIM_CHAR,   pp, char)   \
-        }                                                          \
-} while (0)
+#define AST_PRIM_DUMP(pp, dtype, fp) \
+        fprintf(fp, AST_PRIM_CONV_SPEC(pp), pp->ap_ ## dtype)
 
 static void indent(struct ast_dump_visitor *dv, int space);
 
@@ -67,6 +52,7 @@ static const char *const AST_PRIM_NAMES[AST_PRIM_COUNT] = {
         "ast_float",
         "ast_double",
         "ast_char",
+        "ast_cstr",
 };
 #define AST_PRIM_NAME(pp) \
         AST_PRIM_NAMES[pp->ap_type]
@@ -129,7 +115,10 @@ prim_dump(struct ast_visitor *vp, const struct ast_prim *pp)
         AST_DUMP_TYPE(dv, AST_PRIM_NAME(pp));
 
         AST_DUMP_FIELD(dv, ".val = ");
+        AST_PRIM_SWITCH(pp, AST_PRIM_DUMP, dv->adv_fp);
+        /*
         AST_PRIM_DUMP_SWITCH(dv, pp);
+        */
         printf(",\n");
 
         AST_DUMP_END(dv);

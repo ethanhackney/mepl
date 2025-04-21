@@ -2,7 +2,7 @@
 #include "lib.h"
 
 #define BIN_OP(ap) \
-        struct_of(ap, struct ast_bin_op, abo_ast)
+        STRUCT_OF(ap, struct ast_bin_op, abo_ast)
 
 static void bin_op_visit(const struct ast *ap, struct ast_visitor *vp);
 
