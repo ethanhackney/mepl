@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sysexits.h>
+#include <time.h>
 
 static void ptrset_test(struct ptrset *psp);
 
@@ -53,17 +54,23 @@ main(int argc, char **argv)
 static void
 ptrset_test(struct ptrset *psp)
 {
-        union {
+        static union {
                 void *p;
                 ptr_t addr[ADDR_LEN];
-        } u[1 << 16];
+        } u[1 << 20];
         int size = sizeof(u) / sizeof(*u);
         int i = 0;
+        clock_t start, end;
 
+        start = clock();
         for (i = 0; i < size; i++) {
-                u[i].p = strdup("hello world");
+                u[i].p = malloc(1);
                 psp->ps_add(psp, u[i].addr);
-                free(u[i].p);
         }
         printf("usage: %zu\n", psp->ps_bytes);
+        end = clock();
+        printf("%f\n", (double)(end - start) / CLOCKS_PER_SEC);
+
+        for (i = 0; i < size; i++)
+                free(u[i].p);
 }
