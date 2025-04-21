@@ -1,0 +1,17 @@
+sort hash chains
+        NOTE: never mind that makes growing the table slower
+        do tests to see if its worth it
+check saved hashes before string compares
+        if they dont have the same hash, they cant be the same key
+
+use some kind of randomized hash to avoid denial of service
+
+remember that you can hash anything, you could use a struct as a key
+by just hashing each of its fields and adding those together
+
+if things are multithreaded then try to keep the current table available to
+threads while you are growing the new table
+
+tab = alloc new tab
+
+maybe try quadratic probing, but im not optimistic about it

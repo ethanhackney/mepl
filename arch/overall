@@ -1,0 +1,81 @@
+compiler process
+================
+[ kernel{}  ] produce chars
+   |
+  char{}
+   V
+[ buf{}     ] consumes chars, produces chars
+   |
+ char{}
+   V
+[ lex{}     ] consumes chars, produces tokens
+   |
+ tok{}
+   V
+[ parser{}  ] consumes tokens, produces asts
+   |
+ ast{}
+   V
+[ ast_opt{} ] consumes asts, produces asts
+   |
+ ast{}
+   V
+[ gen{}     ] consumes asts, produces asm
+   |
+  asm{}
+   V
+[ gen_opt{} ] consumes asm, produces asm
+   |
+ asm{}
+   V
+[ file{}    ] consumes asm, produces chars
+
+as process
+==========
+[ kernel{}  ] produce chars
+   |
+  char{}
+   V
+[ buf{}     ] consumes chars, produces chars
+   |
+ char{}
+   V
+[ as{}     ] conumes chars, produces machine code
+   |
+ code{}
+   V
+[ objf{}    ] consumes code, prodcues chars
+
+ld process
+==========
+[ kernel{}  ] produce chars
+   |
+  char{}
+   V
+[ buf{}     ] consumes chars, produces chars
+   |
+ char{}
+   V
+[ obj{}     ] consumes chars, produces object file
+   |
+  objf{}
+   V
+[ ld{}      ] consumes object files, produces execuatble
+   |
+[ exec{}    ] consumes executable, produces chars
+
+vm process
+==========
+[ kernel{}  ] produce chars
+   |
+  char{}
+   V
+[ buf{}     ] consumes chars, produces chars
+   |
+ char{}
+   V
+[ interp{}  ]
+   |
+ code{}
+   V
+[ cpu{}     ] -> gc{}, obj{}
