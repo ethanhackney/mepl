@@ -43,6 +43,8 @@ typedef uint64_t bitset_t;
         bitset_idx_check(bp, word, bit);        \
                                                 \
         bp->b_set[word] op (ONE << bit);        \
+        if (word < bp->last)                    \
+                bp->last = word;                \
 } while (0)
 
 static inline int

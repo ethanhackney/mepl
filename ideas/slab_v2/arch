@@ -48,7 +48,7 @@ slab{
         .empty = { }<-+ # circular doubly linked list of all empty slab nodes
                   ^   |
                   +---+
-        .ring  = [ ][ ][ ][ ] # fixed size ring buffer of pointers to freed nodes
+        .ring  = [ ][ ][ ][ ] # fixed size ring buffer of pointers to unused nodes
                   |  |  |  |  # hot nodes come off first, when it gets full then
                   |  |  |  |  # free() is called on the coldest node
                   |  |  |  |
@@ -82,3 +82,38 @@ slabhash = {
                         .s_nodes  = { }                                              |
                                      |                                               |
                                      +-----------------------------------------------+
+
+REMEMBER: bitset keeps index of next entry with free bits so finding next
+word with free bits is O(1) and __builtin_ctzll() is also O(1)
+
+time complexity break down
+==========================
+
+slab_init():
+------------
+O(1)
+
+slab_get():
+-----------
+O(1)                 if avail list is non-empty
+O(1)                 if avail list is empty, but ring is non-empty
+O(malloc(slab_node)) if avail list is empty, and ring is empty (basically never happens)
+O(slab_node_get())
+O(1)                 if node is empty, move to empty list (list removal/insertion)
+
+slab_node_get():
+----------------
+O(1)                           for finding a free entry (bitset next free)
+O(malloc(sizeof(struct ptr))) (probably O(1) because 'struct ptr's are only 16 bytes on 64-bit)
+
+slab_put():
+----------
+O(slab_node_put())
+O(free(slab_node)) if ring is full (probably O(1) for same reasons as free(ptr))
+O(1)               for ring management (pop() + push() if full, or just push() if not)
+O(1)               for moving node to head of avail list if count > head(avail)->count
+
+slab_node_put():
+----------------
+O(1)          for freeing entry
+O(free(ptr)) (probably O(1) because all free() will have to do is coalesce in the worst case)
