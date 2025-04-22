@@ -163,9 +163,11 @@ NAME ## _get(struct NAME *sp)                                           \
         if (p == &sp->s_nodes)                                          \
                 np = NAME ## _node_new(sp);                             \
                                                                         \
-        list_rm(&np->n_nodes);                                          \
-        list_add_after(&sp->s_nodes, &np->n_nodes);                     \
         vp = NAME ## _node_get(np);                                     \
+        if (np->n_count) {                                              \
+                list_rm(&np->n_nodes);                                  \
+                list_add_after(&sp->s_nodes, &np->n_nodes);             \
+        }                                                               \
         ptr->p_owner = np;                                              \
         ptr->p_ptr = vp;                                                \
         return ptr;                                                     \
@@ -184,8 +186,12 @@ NAME ## _put(struct NAME *sp, struct ptr **pp)                          \
         NAME ## _node_put(np, (*pp)->p_ptr);                            \
         pp_free(pp);                                                    \
                                                                         \
-        if (np->n_count == sp->s_arr_size)                              \
+        if (np->n_count == sp->s_arr_size) {                            \
                 NAME ## _node_free(sp, &np);                            \
+        } else {                                                        \
+                list_rm(&np->n_nodes);                                  \
+                list_add_after(&sp->s_nodes, &np->n_nodes);             \
+        }                                                               \
 }
 
 #endif

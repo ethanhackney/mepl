@@ -1,0 +1,89 @@
+main.me
+=======
+extern int n
+int n = 5
+print(m)
+
+test.me
+=======
+extern int m
+m = 10
+print(n)
+
+ld structures
+=============
+objlist = [
+        {
+                .deftab = {
+                        ["n"] = true,
+                },
+                .deflist = [ "n" ], # for faster iteration
+                .undefs = [ "m" ],
+        },
+        {
+                .defs = {
+                        ["m"] = true,
+                },
+                .deflist = [ "m" ],
+                .undefs = [ "n" ],
+        },
+]
+
+def_tab = {
+        ["n"] = &objlist[0],
+        ["m"] = &objlist[1],
+}
+
+undefs = {
+        ["m"] = true,
+}
+
+always try to find new ways to be multithreaded
+
+dont think i have to do this at all if i keep 'undef' updated
+
+O(len(objlist))
+===============
+for obj in objlist:
+        O(len(obj.undefs))
+        ==================
+        while not obj.undefs.empty():
+                O(1)
+                =====================
+                top = obj.undefs.pop()
+                d = def_tab[top.sym]
+                if d is nil:
+                        error("symbol not defined")
+
+threadfn(path):
+        obj = tabify(path)
+        lock(ld)
+        for d in obj.deflist:
+                def_tab[d.sym] = obj
+        objlist.push(obj)
+        unlock(ld)
+
+struct sym:
+        name  # identifier
+        state # defined or undefined
+
+read_obj(path):
+        fd = open(path)
+        obj = new obj{fd}
+        lseek(obj.fd, SYM_TAB_SIZE_OFFSET, SEEK_SET)
+        size = 0
+        read(obj.fd, &size, sizeof(size))
+        lseek(obj.fd, SYM_TAB_OFFSET, SEEK_SET)
+        struct sym s;
+        for i = 0 to size:
+                read(obj.fd, &s, sizeof(s))
+                if s.state == DEFINED:
+                        obj.defs[s.name] = true
+                        obj.deflist.push_back(s.name)
+                        if undefs[s.name]:
+                                undefs.erase(s.name)
+                else:
+                        obj.undefs[s.name] = true
+                        undefs[s.name] = true
+
+        lo

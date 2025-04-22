@@ -5,8 +5,15 @@
 #include "ring.h"
 #include "slab.h"
 
-BITSET_DEF(static, myset)
-RING_DEF(static, int, intbuf)
+/* TODO: time to check for some heavy bugs because the compiler
+ * wont help me with memory leaks in this kind of code
+ */
+
+/**
+ * maybe instead of 'struct ptr', we could use a hash table that maps pointers
+ * to the slab_nodes that own them, but that wouldnt actually save any memory and
+ * would slow things down, so scrap it
+ */
 
 struct ast {
         void (*a_dump)(const struct ast *ap, int space);
@@ -111,6 +118,8 @@ static struct slab_tab_entry *def[] = {
         NULL,
 };
 
+static void ast_var_def_free(struct ast_var_def **vdp);
+
 int
 main(void)
 {
@@ -129,7 +138,10 @@ main(void)
         dp->avd_name = "ethan";
         puts(dp->avd_name);
 
+        ast_var_def_free(&dp);
+        /*
         slab_tab_put("AST_VAR_DEF", &ptr);
+        */
 
         slab_tab_free();
 }
@@ -192,4 +204,11 @@ slab_tab_put(const char *type, struct ptr **p)
         ASSERT(bp);
         ASSERT(!strcmp(slabtab[i].key, type));
         bp->sb_put(bp, p);
+}
+
+static void
+ast_var_def_free(struct ast_var_def **vdp)
+{
+        struct ptr **p = &(*vdp)->avd_ptr;
+        slab_tab_put("AST_VAR_DEF", p);
 }
