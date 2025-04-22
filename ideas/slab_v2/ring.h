@@ -17,12 +17,12 @@
         ASSERT(is_power_of_2(rp->r_size));      \
 } while (0)
 
-#define ring_rd_inc(rp) do {                            \
-        rp->r_rd = wrap_inc(rp->r_rd, rp->r_size);      \
+#define ring_rd_inc(rp) do {                                    \
+        (rp)->r_rd = wrap_inc((rp)->r_rd, (rp)->r_size);        \
 } while (0)
 
-#define ring_wr_inc(rp) do {                            \
-        rp->r_wr = wrap_inc(rp->r_wr, rp->r_size);      \
+#define ring_wr_inc(rp) do {                                    \
+        (rp)->r_wr = wrap_inc((rp)->r_wr, (rp)->r_size);        \
 } while (0)
 
 static inline size_t
@@ -30,6 +30,26 @@ wrap_inc(size_t p, size_t size)
 {
         return (p + 1) & (size - 1);
 }
+
+#define ring_rd_dec(rp) do {                                    \
+        (rp)->r_rd = wrap_dec((rp)->r_rd, (rp)->r_size);        \
+} while (0)
+
+#define ring_wr_dec(rp) do {                                    \
+        (rp)->r_wr = wrap_dec((rp)->r_wr, (rp)->r_size);        \
+} while (0)
+
+static inline size_t
+wrap_dec(size_t p, size_t size)
+{
+        return (p - 1) & (size - 1);
+}
+
+#define ring_wr(rp) \
+        ((rp)->r_buf[(rp)->r_wr])
+
+#define ring_rd(rp) \
+        ((rp)->r_buf[(rp)->r_rd])
 
 #define RING_DEF(LINKAGE, T, NAME)              \
                                                 \
@@ -60,27 +80,6 @@ NAME ## _free(struct NAME *rp)                  \
         pp_free(&rp->r_buf);                    \
 }                                               \
                                                 \
-LINKAGE inline void                             \
-NAME ## _wr(struct NAME *rp, T v)               \
-{                                               \
-        ring_base_check(rp);                    \
-        rp->r_buf[rp->r_wr] = v;                \
-        ring_wr_inc(rp);                        \
-        ++rp->r_len;                            \
-}                                               \
-                                                \
-LINKAGE inline T                                \
-NAME ## _rd(struct NAME *rp)                    \
-{                                               \
-        T v;                                    \
-                                                \
-        ring_base_check(rp);                    \
-        v = rp->r_buf[rp->r_rd];                \
-        ring_rd_inc(rp);                        \
-        ++rp->r_len;                            \
-        return v;                               \
-}                                               \
-                                                \
 LINKAGE inline bool                             \
 NAME ## _full(const struct NAME *rp)            \
 {                                               \
@@ -93,6 +92,39 @@ NAME ## _empty(const struct NAME *rp)           \
 {                                               \
         ring_base_check(rp);                    \
         return !rp->r_len;                      \
-}
+}                                               \
+                                                \
+LINKAGE inline void                             \
+NAME ## _wr_back(struct NAME *rp, T v)          \
+{                                               \
+        ring_base_check(rp);                    \
+        ring_wr(rp) = v;                        \
+        ring_wr_inc(rp);                        \
+        ++rp->r_len;                            \
+}                                               \
+                                                \
+LINKAGE inline T                                \
+NAME ## _rd_back(struct NAME *rp)               \
+{                                               \
+        T v;                                    \
+                                                \
+        ring_base_check(rp);                    \
+        ring_wr_dec(rp);                        \
+        v = ring_wr(rp);                        \
+        --rp->r_len;                            \
+        return v;                               \
+}                                               \
+                                                \
+LINKAGE inline T                                \
+NAME ## _rd_front(struct NAME *rp)              \
+{                                               \
+        T v;                                    \
+                                                \
+        ring_base_check(rp);                    \
+        v = ring_rd(rp);                        \
+        ring_rd_inc(rp);                        \
+        --rp->r_len;                            \
+        return v;                               \
+}                                               \
 
 #endif

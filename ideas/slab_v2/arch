@@ -36,19 +36,21 @@ slab_node{
         .set   = 000000000000000000 # bitset of (len(.arr) >> 64) words
         .count = 5                  # count of available nodes
         .nodes = { }<-+             # circular doubly linked list of all slab nodes
-}                 ^   |             # the same list node is used for slab.nodes
+}                 ^   |             # the same list node is used for slab.avail
                   +---+             # and slab.empty because they are mutually
                                     # exclusive
 
 slab{
                   
-        .nodes = { }<-- # circular doubly linked list of all non-empty slab nodes
+        .avail = { }<-- # circular doubly linked list of all non-empty slab nodes
                   ^   |
                   +---+
         .empty = { }<-+ # circular doubly linked list of all empty slab nodes
                   ^   |
                   +---+
         .ring  = [ ][ ][ ][ ] # fixed size ring buffer of pointers to freed nodes
+                  |  |  |  |  # hot nodes come off first, when it gets full then
+                  |  |  |  |  # free() is called on the coldest node
                   |  |  |  |
                   |  |  |  +--------> { free slab node kept for future use }
                   |  |  +-----------> { free slab node kept for future use }

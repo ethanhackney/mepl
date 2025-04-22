@@ -1,6 +1,23 @@
 #ifndef SLAB_H
 #define SLAB_H
 
+/**
+ * TODO: switch ring to a
+ *
+ * if np.count == pool_size:
+ *      ring.push_Back(np)
+ *
+ * if !ring_empty():
+ *      np = ring.pop_back()
+ *
+ * if ring.full():
+ *      free(ring.pop_front())
+ *
+ * push_back() # add hot nodes to end
+ * pop_back()  # grab that hottest node (the last added)
+ * pop_front() # free the coldest node  (the first added)
+ */
+
 #include "base.h"
 #include "bitset.h"
 #include "lib.h"
@@ -8,8 +25,8 @@
 #include "ring.h"
 
 #define slab_base_check(sp) do {                        \
-        ASSERT((sp)->s_nodes.next);                     \
-        ASSERT((sp)->s_nodes.prev);                     \
+        ASSERT((sp)->s_avail.next);                     \
+        ASSERT((sp)->s_avail.prev);                     \
         ASSERT((sp)->s_arr_size);                       \
         ASSERT(is_power_of_2((sp)->s_arr_size));        \
 } while (0)
@@ -39,7 +56,7 @@ struct NAME ## _node {                                                  \
 RING_DEF(LINKAGE, struct NAME ## _node *, NAME ## _ring)                \
 struct NAME {                                                           \
         struct NAME ## _ring s_ring;                                    \
-        struct list          s_nodes;                                   \
+        struct list          s_avail;                                   \
         struct list          s_empty;                                   \
         size_t               s_arr_size;                                \
 };                                                                      \
@@ -74,7 +91,7 @@ NAME ## _node_new(struct NAME *sp)                                      \
         slab_base_check(sp);                                            \
                                                                         \
         if (!NAME ## _ring_empty(&sp->s_ring))                          \
-                np = NAME ## _ring_rd(&sp->s_ring);                     \
+                np = NAME ## _ring_rd_back(&sp->s_ring);                \
         else                                                            \
                 np = ALLOC(sizeof(*np));                                \
                                                                         \
@@ -106,11 +123,11 @@ NAME ## _node_free(struct NAME *sp, struct NAME ## _node **npp)         \
         list_rm(&(*npp)->n_nodes);                                      \
                                                                         \
         if (NAME ## _ring_full(&sp->s_ring)) {                          \
-                np = NAME ## _ring_rd(&sp->s_ring);                     \
+                np = NAME ## _ring_rd_front(&sp->s_ring);               \
                 do_ ## NAME ## _node_free(&np);                         \
         }                                                               \
                                                                         \
-        NAME ## _ring_wr(&sp->s_ring, *npp);                            \
+        NAME ## _ring_wr_back(&sp->s_ring, *npp);                       \
         *npp = NULL;                                                    \
 }                                                                       \
                                                                         \
@@ -122,7 +139,7 @@ NAME ## _init(struct NAME *sp, size_t arr_size, size_t ring_size)       \
         ASSERT(is_power_of_2(ring_size));                               \
                                                                         \
         NAME ## _ring_init(&sp->s_ring, ring_size);                     \
-        list_init(&sp->s_nodes);                                        \
+        list_init(&sp->s_avail);                                        \
         list_init(&sp->s_empty);                                        \
         sp->s_arr_size = arr_size;                                      \
 }                                                                       \
@@ -139,8 +156,8 @@ NAME ## _free(struct NAME *sp)                                          \
         ring_for_each(&sp->s_ring, i, n)                                \
                 do_ ## NAME ## _node_free(&sp->s_ring.r_buf[i]);        \
                                                                         \
-        while (!list_empty(&sp->s_nodes)) {                             \
-                np = node(sp->s_nodes.next, NAME);                      \
+        while (!list_empty(&sp->s_avail)) {                             \
+                np = node(sp->s_avail.next, NAME);                      \
                 do_ ## NAME ## _node_free(&np);                         \
         }                                                               \
                                                                         \
@@ -162,12 +179,12 @@ NAME ## _get(struct NAME *sp)                                           \
                                                                         \
         slab_base_check(sp);                                            \
                                                                         \
-        slab_for_each_entry(&sp->s_nodes, p, np, NAME) {                \
+        slab_for_each_entry(&sp->s_avail, p, np, NAME) {                \
                 if (np->n_count)                                        \
                         break;                                          \
         }                                                               \
                                                                         \
-        if (p == &sp->s_nodes)                                          \
+        if (p == &sp->s_avail)                                          \
                 np = NAME ## _node_new(sp);                             \
                                                                         \
         vp = NAME ## _node_get(np);                                     \
@@ -197,7 +214,7 @@ NAME ## _put(struct NAME *sp, struct ptr **pp)                          \
                 NAME ## _node_free(sp, &np);                            \
         } else {                                                        \
                 list_rm(&np->n_nodes);                                  \
-                list_add_after(&sp->s_nodes, &np->n_nodes);             \
+                list_add_after(&sp->s_avail, &np->n_nodes);             \
         }                                                               \
 }
 
