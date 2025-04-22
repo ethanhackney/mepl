@@ -36,12 +36,16 @@ slab_node{
         .set   = 000000000000000000 # bitset of (len(.arr) >> 64) words
         .count = 5                  # count of available nodes
         .nodes = { }<-+             # circular doubly linked list of all slab nodes
-}                 ^   |
-                  +---+
+}                 ^   |             # the same list node is used for slab.nodes
+                  +---+             # and slab.empty because they are mutually
+                                    # exclusive
 
 slab{
                   
-        .nodes = { }<-- # circular doubly linked list of all slab nodes
+        .nodes = { }<-- # circular doubly linked list of all non-empty slab nodes
+                  ^   |
+                  +---+
+        .empty = { }<-+ # circular doubly linked list of all empty slab nodes
                   ^   |
                   +---+
         .ring  = [ ][ ][ ][ ] # fixed size ring buffer of pointers to freed nodes
@@ -56,13 +60,8 @@ slab_tab{
         # hash table mapping type names to slabs that provide that type
 }
 
-optimizations
-=============
-everytime a node is found that is not empty, it is moved to the head of the list
-so the node at the beginning of the list is highly likely to have available
-entries
-
-
+the hash table based thing is dumb, it doesnt actually help with decoupling
+and only slows things down
 
 slabhash = {
         ["AST_VAR_DEF"] ==> {                 |  |  |  |

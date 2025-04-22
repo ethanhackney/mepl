@@ -53,4 +53,13 @@ list_add_after(struct list *before, struct list *p)
         before->next = before->next->prev = p;
 }
 
+static inline void
+list_add_before(struct list *before, struct list *p)
+{
+        ASSERT(p);
+        ASSERT(before);
+        ASSERT(before->prev);
+        list_add_after(before->prev, p);
+}
+
 #endif

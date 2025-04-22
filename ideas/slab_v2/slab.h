@@ -40,6 +40,7 @@ RING_DEF(LINKAGE, struct NAME ## _node *, NAME ## _ring)                \
 struct NAME {                                                           \
         struct NAME ## _ring s_ring;                                    \
         struct list          s_nodes;                                   \
+        struct list          s_empty;                                   \
         size_t               s_arr_size;                                \
 };                                                                      \
                                                                         \
@@ -122,6 +123,7 @@ NAME ## _init(struct NAME *sp, size_t arr_size, size_t ring_size)       \
                                                                         \
         NAME ## _ring_init(&sp->s_ring, ring_size);                     \
         list_init(&sp->s_nodes);                                        \
+        list_init(&sp->s_empty);                                        \
         sp->s_arr_size = arr_size;                                      \
 }                                                                       \
                                                                         \
@@ -139,6 +141,11 @@ NAME ## _free(struct NAME *sp)                                          \
                                                                         \
         while (!list_empty(&sp->s_nodes)) {                             \
                 np = node(sp->s_nodes.next, NAME);                      \
+                do_ ## NAME ## _node_free(&np);                         \
+        }                                                               \
+                                                                        \
+        while (!list_empty(&sp->s_empty)) {                             \
+                np = node(sp->s_empty.next, NAME);                      \
                 do_ ## NAME ## _node_free(&np);                         \
         }                                                               \
                                                                         \
@@ -164,9 +171,9 @@ NAME ## _get(struct NAME *sp)                                           \
                 np = NAME ## _node_new(sp);                             \
                                                                         \
         vp = NAME ## _node_get(np);                                     \
-        if (np->n_count) {                                              \
+        if (!np->n_count) {                                             \
                 list_rm(&np->n_nodes);                                  \
-                list_add_after(&sp->s_nodes, &np->n_nodes);             \
+                list_add_after(&sp->s_empty, &np->n_nodes);             \
         }                                                               \
         ptr->p_owner = np;                                              \
         ptr->p_ptr = vp;                                                \
