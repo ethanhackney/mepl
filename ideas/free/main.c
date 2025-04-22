@@ -9,7 +9,7 @@
 #endif
 
 #ifndef POOL_SIZE
-#define POOL_SIZE (1 << 8)
+#define POOL_SIZE (1 << 16)
 #endif
 
 struct db_query {
@@ -20,16 +20,19 @@ struct db_query {
 FREE_NODE_DEF(static, struct db_query, db_query_node, POOL_SIZE)
 
 static LIST_DEF(freelist);
+static uint64_t sum = 0;
+static uint64_t n_alloc = 0;
 
 static inline struct db_query_node_ptr *
 freelist_get(void)
 {
         struct db_query_node *fnp = NULL;
         struct list *p = NULL;
-        int iters = 0;
+
+        ++n_alloc;
 
         LIST_FOR_EACH(&freelist, p) {
-                ++iters;
+                ++sum;
                 fnp = STRUCT_OF(p, struct db_query_node, fn_list);
                 if (fnp->fn_count)
                         break;
@@ -40,7 +43,6 @@ freelist_get(void)
                 p = &fnp->fn_list;
         }
 
-        printf("%d iters to find a node\n", iters);
         list_rm(p);
         list_add_after(&freelist, p);
         return db_query_node_get(fnp);
@@ -95,4 +97,6 @@ main(int argc, char **argv)
                 freelist_put(&lp->dqpl_ptr);
                 free(lp);
         }
+
+        printf("average allocation time = %lu\n", sum / n_alloc);
 }

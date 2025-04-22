@@ -31,6 +31,7 @@ static_assert(BITSET_SIZE(SIZE) > 0);                           \
                                                                 \
 struct NAME {                                                   \
         bitset_t set[BITSET_SIZE(SIZE)];                        \
+        bitset_t last;                                          \
 };                                                              \
                                                                 \
 LINKAGE inline void                                             \
@@ -46,20 +47,22 @@ NAME ## _free(struct NAME *bp)                                  \
 }                                                               \
                                                                 \
 LINKAGE inline bitset_t                                         \
-NAME ## _first_zero(const struct NAME *bp)                      \
+NAME ## _first_zero(struct NAME *bp)                            \
 {                                                               \
         bitset_t idx = 0;                                       \
         bitset_t i = 0;                                         \
         int bit = 0;                                            \
                                                                 \
-        for (i = 0; i < BITSET_SIZE(SIZE); i++) {               \
+        for (i = bp->last; i < BITSET_SIZE(SIZE); i++) {        \
                 bit = word_first_zero(bp->set[i]);              \
                 if (bit < 0)                                    \
                         continue;                               \
                                                                 \
                 idx = (i << BITSET_SHIFT) + (bitset_t)bit;      \
-                if (idx < (SIZE))                               \
+                if (idx < (SIZE)) {                             \
+                        bp->last = i;                           \
                         return idx;                             \
+                }                                               \
         }                                                       \
                                                                 \
         return (bitset_t)-1;                                    \
@@ -81,6 +84,7 @@ NAME ## _clear(struct NAME *bp, bitset_t n)                     \
         bitset_t bit = BITSET_BIT_IDX(n);                       \
                                                                 \
         bp->set[word] &= ~((bitset_t)1 << bit);                 \
+        bp->last = word;                                        \
 }
 
 #endif
