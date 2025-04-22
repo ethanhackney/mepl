@@ -1,0 +1,39 @@
+slab_base
+=========
+struct ptr *(*sb_get)(struct pool *pool)
+void       (*sb_put)(struct pool *pool, struct ptr *ptr)
+
+slab<T>
+=======
+struct slab_base s_base
+struct ring<T>   s_ring
+struct list      s_nodes
+size_t           s_pool_sz
+size_t           s_ring_sz
+
+slab_node<T>
+============
+struct bitset<T> sn_set
+struct list      sn_nodes
+size_t           sn_count
+T                *sn_pool
+
+the slab tab can be a perfect hash table because there are a fixed number
+of slabs (one for each type)
+
+O(1) to find a slab{}
+O(1) to allocate from a slab{}
+O(1) to reach slab_node{} from ptr{}
+O(1) to remove slab_node{} from list{}
+
+hash_map<str,slab_base*> slab_tab {
+        { "AST_STR", &ast_str_slab.ss_slab },
+        { "AST_VAR_DEF", &ast_var_def_slab.vds_slab },
+};
+
+{
+        ["AST_VAR_DEF"] ==> {
+                                .s_ring[]  = { cache of slab_nodes },
+                                .s_nodes[] = { circular list of bitset + array },
+                            }
+}

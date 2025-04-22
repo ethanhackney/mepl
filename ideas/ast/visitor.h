@@ -3,10 +3,12 @@
 
 struct ast_bin_op;
 struct ast_prim;
+struct ast_var_def;
 
 struct ast_visitor {
         void (*av_bin_op)(struct ast_visitor *vp, const struct ast_bin_op *op);
         void (*av_prim)(struct ast_visitor *vp, const struct ast_prim *pp);
+        void (*av_var_def)(struct ast_visitor *vp, const struct ast_var_def *dp);
 };
 
 #endif

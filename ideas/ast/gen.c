@@ -7,9 +7,6 @@
 #define GEN(vp) \
         STRUCT_OF(vp, struct ast_gen_visitor, agv_v)
 
-#define AST_BIN_OP_GEN(op, r0, r1, fp) \
-        fprintf(fp, "%s %s, %s\n", AST_BIN_OP_CMD(op), r0, r1)
-
 #define GEN_PRIM_FMT(pp, dst) do {              \
         char *p = dst;                          \
         p = stpcpy(p, "mov %s, ");              \
@@ -24,15 +21,15 @@
         fprintf(fp, conv_spec, r, pp->ap_ ## dtype);    \
 } while (0)
 
-static const char *const AST_BIN_OP_CMDS[AST_BIN_OP_COUNT] = {
+static const char *const AST_BIN_OP_CMD[AST_BIN_OP_COUNT] = {
         "add",
         "sub",
         "div",
         "mod",
         "mul",
 };
-#define AST_BIN_OP_CMD(op) \
-        AST_BIN_OP_CMDS[op->abo_type]
+#define AST_BIN_OP_GEN(op, r0, r1, fp) \
+        fprintf(fp, "%s %s, %s\n", AST_BIN_OP_CMD[op->abo_type], r0, r1)
 
 static void bin_op_gen(struct ast_visitor *vp, const struct ast_bin_op *op);
 static void prim_gen(struct ast_visitor *vp, const struct ast_prim *pp);
@@ -49,6 +46,7 @@ ast_gen_visitor_init(struct ast_gen_visitor *gv, FILE *fp)
 static void bin_op_gen(struct ast_visitor *vp, const struct ast_bin_op *op)
 {
         struct ast_gen_visitor *gv = GEN(vp);
+        struct reglist *rp = &gv->agv_reg;
         const struct ast *left = op->abo_left;
         const struct ast *right = op->abo_right;
         const char *src = NULL;
@@ -57,10 +55,10 @@ static void bin_op_gen(struct ast_visitor *vp, const struct ast_bin_op *op)
         left->a_visit(left, vp);
         right->a_visit(right, vp);
 
-        src = reglist_last(&gv->agv_reg);
-        dst = reglist_get(&gv->agv_reg);
+        src = reglist_last(rp);
+        dst = reglist_get(rp);
         AST_BIN_OP_GEN(op, dst, src, gv->agv_fp);
-        reglist_put(&gv->agv_reg, src);
+        reglist_put(rp, src);
 }
 
 static void prim_gen(struct ast_visitor *vp, const struct ast_prim *pp)
