@@ -31,9 +31,53 @@ hash_map<str,slab_base*> slab_tab {
         { "AST_VAR_DEF", &ast_var_def_slab.vds_slab },
 };
 
-{
-        ["AST_VAR_DEF"] ==> {
-                                .s_ring[]  = { cache of slab_nodes },
+slab_node{
+        .arr   = [ ][ ][ ][ ][ ]    # fixed size array
+        .set   = 000000000000000000 # bitset of (len(.arr) >> 64) words
+        .count = 5                  # count of available nodes
+        .nodes = { }<-+             # circular doubly linked list of all slab nodes
+}                 ^   |
+                  +---+
+
+slab{
+                  
+        .nodes = { }<-- # circular doubly linked list of all slab nodes
+                  ^   |
+                  +---+
+        .ring  = [ ][ ][ ][ ] # fixed size ring buffer of pointers to freed nodes
+                  |  |  |  |
+                  |  |  |  +--------> { free slab node kept for future use }
+                  |  |  +-----------> { free slab node kept for future use }
+                  |  +--------------> { free slab node kept for future use }
+                  +-----------------> { free slab node kept for future use }
+}
+
+slab_tab{
+        # hash table mapping type names to slabs that provide that type
+}
+
+optimizations
+=============
+everytime a node is found that is not empty, it is moved to the head of the list
+so the node at the beginning of the list is highly likely to have available
+entries
+
+
+
+slabhash = {
+        ["AST_VAR_DEF"] ==> {                 |  |  |  |
+                                .s_ring[]  = [ ][ ][ ][ ]
                                 .s_nodes[] = { circular list of bitset + array },
                             }
 }
+                                     +------------------> { free cached slab_node }
+                                     |  +---------------> { free cached slab_node }
+                                     |  |  +------------> { free cached slab_node }
+["AST_VAR_DEF"]=====>{               |  |  |
+                        .s_ring[] = [ ][ ][ ]
+
+                                     +------{ slab_node }-------{ slab_node }--------+
+                                     |                                               
+                        .s_nodes  = { }                                              |
+                                     |                                               |
+                                     +-----------------------------------------------+
