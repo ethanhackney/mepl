@@ -13,7 +13,7 @@ typedef uint64_t bitset_t;
 #define BITSET_SIZE(SIZE)  ((bitset_t)(SIZE) >> BITSET_SHIFT)
 #define BITS_PER_WORD      ((bitset_t)64)
 
-inline int
+static inline int
 word_first_zero(bitset_t w)
 {
         bitset_t inv = ~w;

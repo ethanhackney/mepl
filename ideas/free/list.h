@@ -2,10 +2,10 @@
 #define LIST_H
 
 #define LIST_FOR_EACH(head, p) \
-        for (p = (head); p != (head); p = p->next)
+        for (p = (head)->next; p != (head); p = p->next)
 
 #define LIST_FOR_EACH_SAFE(head, p, next) \
-        for (p = (head); (next = p->next), p != (head); p = next)
+        for (p = (head)->next; (next = p->next), p != (head); p = next)
 
 #define LIST_DEF(name)          \
         struct list name = {    \
